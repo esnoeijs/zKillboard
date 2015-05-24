@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>zKillboard by zKillboard</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>zKillboard</h1>
+        <h2></h2>
+        <a href="https://github.com/zKillboard/zKillboard" class="button"><small>View project on</small> GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h2>
+<a id="zkillboard" class="anchor" href="#zkillboard" aria-hidden="true"><span class="octicon octicon-link"></span></a>zKillboard</h2>
+
+<p>zKillboard is a killboard created for EVE-Online, for use on zkillboard.com, but can also be used for single entities.</p>
+
+<h4>
+<a id="license-and-copyright" class="anchor" href="#license-and-copyright" aria-hidden="true"><span class="octicon octicon-link"></span></a>License and Copyright</h4>
+
+<p>Licensing for all files in this repository can be found in in AGPL.md</p>
+
+<h2>
+<a id="warning-warning" class="anchor" href="#warning-warning" aria-hidden="true"><span class="octicon octicon-link"></span></a>WARNING WARNING</h2>
+
+<p>This is the latest verison of zKillboard.com, which prefers NoSQL over MySQL. If you do not have experience with installing and maintaining a NoSQL database, specifically TokuMX v2.4, we do not recommend you try this at home unless you truly enjoy a challenge! There are some aspects of zKillboard.com that still utilize MySQL, but that is only because they haven't been integrated into NoSQL yet.</p>
+
+<h3>
+<a id="history-and-previous-versions" class="anchor" href="#history-and-previous-versions" aria-hidden="true"><span class="octicon octicon-link"></span></a>History and previous versions</h3>
+
+<p>zKillboard.com came as the brainchild of Squizz Caphinator who wanted to improve upon <a href="Eve-Dev%20Killboard">http://wiki.eve-id.net/EDK</a>. Squizz decided to write a new killboard completely from scratch and began the zKillboard project. Karbowiak of eve-kill.net eventually joined into the project, contributed much code,, <a href="https://github.com/EVE-KILL/zKillboard">created a repository on Github</a>, and announced zkillboard as the new Beta killboard for eve-kill.net. zKillboard matured and gained a fanbase, and of course, haters. As time went on Squizz and Karbowiak had some differences and Squizz forked his code into <a href="https://github.com/3zLabs/zKillboard">this repository</a> and made this new repository the primary code base for zkillboard.com. After about a year Squizz then began dabbling in NoSQL, as it seemed the perfect database for the type of data consumed by zKillboard. Two months of heavy coding and extreme database changes, the repository <a href="https://github.com/zKillboard/zKillboard">zKillboard/zKillboard</a> was created to make the code public to the masses with the various NoSQL changes.</p>
+
+<p>Fun fact: zKillboard.com was originally called killwhore.com until it was discovered that the Eve Online forums censored the word whore.</p>
+
+<h2>
+<a id="warning" class="anchor" href="#warning" aria-hidden="true"><span class="octicon octicon-link"></span></a>WARNING</h2>
+
+<p>This is BETA, which means it is a work in progress.  It lacks complete documentation and is currently not meant for use in production.</p>
+
+<p>Since zKillboard is a beta product, it has a code base that is far from complete and enjoys numerous updates, deletions, and modifications to the code and accompanying tables. Please feel free to attempt to install zKillboard on your own server, however, we are not responsible for any difficulties you come across during installation and continuing execution of the product.</p>
+
+<h2>
+<a id="credits" class="anchor" href="#credits" aria-hidden="true"><span class="octicon octicon-link"></span></a>Credits</h2>
+
+<p>zKillboard is released under the GNU Affero General Public License, version 3. The full license is available in the <code>AGPL.md</code> file.
+zKillboard also uses data and images from EVE-Online, which is covered by a seperate license from <em><a href="http://www.ccpgames.com/en/home">CCP</a></em>. You can see the full license in the <code>CCP.md</code> file.
+It also uses various 3rd party libraries, which all carry their own licensing. Please refer to them for more info.</p>
+
+<h2>
+<a id="contact" class="anchor" href="#contact" aria-hidden="true"><span class="octicon octicon-link"></span></a>Contact</h2>
+
+<p><code>#zkb</code> on <code>irc.coldfront.net</code>
+Mibbit link incase you're lazy: <em><a href="http://chat.mibbit.com/?channel=%23zkb&amp;server=irc.coldfront.net">http://chat.mibbit.com/?channel=%23zkb&amp;server=irc.coldfront.net</a></em></p>
+
+<h2>
+<a id="minimum-requirements" class="anchor" href="#minimum-requirements" aria-hidden="true"><span class="octicon octicon-link"></span></a>Minimum requirements</h2>
+
+<ul>
+<li>PHP 5.4+ / HHVM 3.0+</li>
+<li>Apache + mod_rewrite, Nginx or any other httpd you prefer that supports php via mod_php or fastcgi.</li>
+<li>Linux, Mac OS X or Windows</li>
+<li>MariaDB 5.5+</li>
+<li>TokuMX 2.4+</li>
+<li>Composer</li>
+<li>cURL and php5-curl</li>
+</ul>
+
+<h2>
+<a id="recommended-requirements" class="anchor" href="#recommended-requirements" aria-hidden="true"><span class="octicon octicon-link"></span></a>Recommended requirements</h2>
+
+<ul>
+<li>PHP 5.5+ / HHVM 3.0+</li>
+<li>Linux</li>
+<li>MariaDB 5.5+</li>
+<li>TokuMX 2.4+</li>
+<li>Composer</li>
+<li>APC / Redis / Memcached (Doesn't matter which one)</li>
+<li>cURL and php5-curl</li>
+</ul>
+
+<h2>
+<a id="nginx-config" class="anchor" href="#nginx-config" aria-hidden="true"><span class="octicon octicon-link"></span></a>Nginx Config</h2>
+
+<pre><code>upstream php-upstream {
+  server unix:/tmp/php-fpm.sock;
+  server 127.0.0.1:9000;
+}
+
+server {
+  server_name example.com www.example.com;
+  listen      80;
+  root        /path/to/zkb_install;
+
+  location    / {
+    try_files $uri $uri/ /index.php$is_args$args;
+  }
+
+  location    ~ \.php$ {
+    try_files $uri = 404;
+    include   fastcgi_params;
+    fastcgi_index index.php;
+    fastcgi_pass php-upstream;
+  }
+}
+
+</code></pre>
+
+<h2>
+<a id="apache-rewrite" class="anchor" href="#apache-rewrite" aria-hidden="true"><span class="octicon octicon-link"></span></a>Apache rewrite</h2>
+
+<p>Apache rewrite is handled by the .htaccess.</p>
+
+<h2>
+<a id="apache-config" class="anchor" href="#apache-config" aria-hidden="true"><span class="octicon octicon-link"></span></a>Apache Config</h2>
+
+<pre><code>&lt;VirtualHost *:80&gt;
+        ServerAlias yourdomain.tld
+
+        DocumentRoot /path/to/zkb_install/
+        &lt;Directory /path/to/zkb_install/&gt;
+          Require all granted
+          Options FollowSymLinks MultiViews
+          AllowOverride All
+          Order allow,deny
+          Allow from all
+        &lt;/Directory&gt;
+&lt;/VirtualHost&gt;
+</code></pre>
+
+<h3>
+<a id="cronjobs" class="anchor" href="#cronjobs" aria-hidden="true"><span class="octicon octicon-link"></span></a>Cronjobs</h3>
+
+<p>zKillboard comes with a script that automates the cron execution.
+It keeps track of when each job has been run and how frequently it needs to be executed.
+Just run it every minute via cron or a similar system:</p>
+
+<pre><code>* * * * * /var/killboard/zkillboard.com/cron/cron.sh
+</code></pre>
+
+<p>The cron.sh file handles the output as well as rotating of the logfiles in /cron/logs/</p>
+
+<h1>
+<a id="admin-account" class="anchor" href="#admin-account" aria-hidden="true"><span class="octicon octicon-link"></span></a>Admin account</h1>
+
+<p>Every clean zKillboard installation comes with an admin account, default username and password is <code>admin</code>, it is highly recommended that you immediately change this password after you finish your installation.</p>
+
+<p>Current special features to the admin account:</p>
+
+<p>1) Any entities (pilots, corporations, etc.) added to the Admin's tracker will automatically be fetched from <em><a href="https://zkillboard.com">https://zkillboard.com</a></em> up to and including a full fetch of all kills, and maintaining a fetch of said kills on an hourly basis. This of course depends on the cronjob being setup.</p>
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/zKillboard/zKillboard/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/zKillboard/zKillboard/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/zKillboard/zKillboard"></a> is maintained by <a href="https://github.com/zKillboard">zKillboard</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+  
+  </body>
+</html>
