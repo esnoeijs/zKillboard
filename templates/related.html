@@ -7,88 +7,131 @@
 
 <h2><small>Battle Report: </small>{{ systemName }} ({{ regionName }}) / {{ time }} <small> +/- {{ exHours }} Hour{% if exHours > 1%}s{% endif %}</h2>
 
-{% set teamATotal = summary.teamA.totals.total_price %}
-{% set teamBTotal = summary.teamB.totals.total_price %}
-{% set total = teamATotal + teamBTotal %}
+{% set iskTotal = 0 %}
+{% for team in summary %}
+	{% set iskTotal = iskTotal + team.totals.total_price %}
+{% endfor %}
 
-{% set teamAPoints = summary.teamA.totals.total_points %}
-{% set teamBPoints = summary.teamB.totals.total_points %}
+{% set pntTotal = 0 %}
+{% for team in summary %}
+	{% set pntTotal = pntTotal + team.totals.total_points %}
+{% endfor %}
 
-{% if total == 0 %}
+{% if (iskTotal == 0 or pntTotal == 0) %}
 <em>There was no battle in {{ systemName }} <small>({{ regionName }}</small> at {{ time }}.</em><br/><br/>
 {% else %}
-{% set totalSize = summary.teamA.totals.pilotCount + summary.teamB.totals.pilotCount %}
 
-{% set teamASize = summary.teamA.totals.pilotCount %}
-{% set teamBSize = summary.teamB.totals.pilotCount %}
-{% set teamAEff = teamBTotal / total * 100 %}
-{% set teamBEff = teamATotal / total * 100 %}
+{# if we have more then 2 columns make the images smaller and the space they occupy #}
+{% set imgBlockWidth = 285 %}
+{% if cols <= 4 %}
+	{% set resizeImage = 32 %}
+	{% set imgBlockWidth = 70 %}
+{% endif %}
+
+{% set hideSmallClass = 'class="hidden-sm hidden-xs"' %}
 
 <table class="table table-condensed">
 	<tr>
-		<th class="col-lg-6" style="text-align: center"><h5>Team A ({{ teamASize }} involved)</h5></th>
-		<th class="col-lg-6" style="text-align: center"><h5>Team B ({{ teamBSize }} involved)</h5></th>
+		{% for teamname, team in summary %}
+		<th class="col-lg-{{cols}}" style="text-align: center"><h5>Team {{teamname}}</h5></th>
+		{% endfor %}
 	</tr>
 	<tr>
 		<td><a class="btn btn-sm btn-success active" href="/related/{{ solarSystemID }}/{{ relatedTime }}/">Reset Report</a> </td>
-		<td style="text-align: right"><a class="btn btn-sm btn-success active" rel="nofollow" href="/brsave/?sID={{ solarSystemID }}&dttm={{ relatedTime }}&options={{ options }}">Save Battle Report</a></td>
+		<td colspan="{{ summary|length }}" style="text-align: right"><a class="btn btn-sm btn-success active" rel="nofollow" href="/brsave/?sID={{ solarSystemID }}&dttm={{ relatedTime }}&options={{ options }}">Save Battle Report</a></td>
 	</tr>
 	<tr>
+		{% for teamname, team in summary %}
+		{% set pos = loop.index %}
 		<td>
-			{% for entity, name in summary.teamA.entities %}
-				<div><a rel="nofollow" href="./?right={{entity}}"><span class="glyphicon glyphicon-circle-arrow-right"></span></a> {{ name }}</div>
+			{% for entity, name in team.entities %}
+			<div>
+				{{lastPos}}
+				{% if pos != 1 %}<a rel="nofollow" href="./?left={{entity}}&pos={{pos}}"><span class="glyphicon glyphicon-circle-arrow-left"></span></a>{% endif %}
+				{{ name }}
+				{% if pos != 5 %}<a rel="nofollow" href="./?right={{entity}}&pos={{pos}}"><span class="glyphicon glyphicon-circle-arrow-right"></span></a>{% endif %}
+			</div>
 			{% endfor %}
 		</td>
-		<td style="text-align: right;">
-			{% for entity, name in summary.teamB.entities %}
-			<div>{{ name }} <a rel="nofollow" href="./?left={{entity}}"><span class="glyphicon glyphicon-circle-arrow-left"></a></div>
-			{% endfor %}
-		</td>
+		{% endfor %}
 	</tr>
 	<tr>
-		<td>{% set groupIDs = summary.teamA.totals.groupIDs %}{% include 'components/related_summary.html' %}</td>
-		<td>{% set groupIDs = summary.teamB.totals.groupIDs %}{% include 'components/related_summary.html' %}</td>
+		{% for teamname, team in summary %}
+		<td>{% set groupIDs = team.totals.groupIDs %}{% include 'components/related_summary.html' %}</td>
+		{% endfor %}
 	</tr>
 	<tr>
-		<td>Ships Lost: <div class="pull-right"><strong>{{ summary.teamA.totals.totalShips | number_format(0)}} Ships</strong></div></td>
-		<td>Ships Lost: <div class="pull-right"><strong>{{ summary.teamB.totals.totalShips | number_format(0)}} Ships</strong></div></td>
+		{% for teamname, team in summary %}
+		<td><span {{ (not loop.first) ? hideSmallClass|raw }} >Involved Pilots: </span><div class="pull-right"><strong>{{ team.totals.pilotCount | number_format(0)}} Pilots</strong></div></td>
+		{% endfor %}
+	</tr>
+
+	<tr>
+		{% for teamname, team in summary %}
+		<td><span {{ (not loop.first) ? hideSmallClass|raw }} >Ships Killed:  </span><div class="pull-right"><strong>{{ team.totals.total_kills | number_format(0)}} Ships</strong></div></td>
+		{% endfor %}
 	</tr>
 	<tr>
-		<td>Points Lost: <div class="pull-right"><strong>{{ teamAPoints | number_format(0)}}</strong></div></td>
-		<td>Points Lost: <div class="pull-right"><strong>{{ teamBPoints | number_format(0)}}</strong></div></td>
+		{% for teamname, team in summary %}
+		<td><span {{ (not loop.first) ? hideSmallClass|raw }} >Ships Lost:  </span><div class="pull-right"><strong>{{ team.totals.totalShips | number_format(0)}} Ships</strong></div></td>
+		{% endfor %}
 	</tr>
 	<tr>
-		<td>ISK Lost: <div class="pull-right"><strong>{{ teamATotal | number_format(2)}}</strong></div></td>
-		<td>ISK Lost: <div class="pull-right"><strong>{{ teamBTotal | number_format(2)}}</strong></div></td>
+		{% for teamname, team in summary %}
+		<td><span {{ (not loop.first) ? hideSmallClass|raw }} >Points Killed:  </span><div class="pull-right"><strong>{{ team.totals.killed_points | number_format(0)}}</strong></div></td>
+		{% endfor %}
 	</tr>
 	<tr>
-		<td>Efficiency: <div class="pull-right"><strong>{{ teamAEff | number_format(1)}} %</strong></div></td>
-		<td>Efficiency: <div class="pull-right"><strong>{{ teamBEff | number_format(1)}} %</strong></div></td>
+		{% for teamname, team in summary %}
+		<td><span {{ (not loop.first) ? hideSmallClass|raw }} >Points Lost:  </span><div class="pull-right"><strong>{{ team.totals.total_points | number_format(0)}}</strong></div></td>
+		{% endfor %}
 	</tr>
 	<tr>
-		<td>{% set list = summary.teamA.list %}{% include 'components/related_list.html' %}</td>
-		<td>{% set list = summary.teamB.list %}{% include 'components/related_list.html' %}</td>
+		{% for teamname, team in summary %}
+		<td><span {{ (not loop.first) ? hideSmallClass|raw }} >Points Efficiency:  </span><div class="pull-right"><strong>{{ team.totals.point_efficiency==-1 ? '∞' : team.totals.point_efficiency | number_format(1) }} %</strong></div></td>
+		{% endfor %}
+	</tr>
+	<tr>
+		{% for teamname, team in summary %}
+		<td><span {{ (not loop.first) ? hideSmallClass|raw }} >ISK Killed:  </span><div class="pull-right"><strong>{{ team.totals.killed_isk | number_format(2)}}</strong></div></td>
+		{% endfor %}
+	</tr>
+	<tr>
+		{% for teamname, team in summary %}
+		<td><span {{ (not loop.first) ? hideSmallClass|raw }} >ISK Lost:  </span><div class="pull-right"><strong>{{ team.totals.total_price | number_format(2)}}</strong></div></td>
+		{% endfor %}
+	</tr>
+	<tr>
+		{% for teamname, team in summary %}
+		<td><span {{ (not loop.first) ? hideSmallClass|raw }} >ISK Efficiency:  </span><div class="pull-right"><strong>{{ team.totals.isk_efficiency==-1 ? '∞' : team.totals.isk_efficiency | number_format(1) }} %</strong></div></td>
+		{% endfor %}
+	</tr>
+	<tr>
+		{% for teamname, team in summary %}
+		<td>{% set list = team.list %}{% include 'components/related_list.html' %}</td>
+		{% endfor %}
 	</tr>
 </table>
 
-{% set killListTitle = 'Team B Losses' %}
-{% set killList = summary.teamB.kills %}
-{% set isEmbedded = true %}
-{% include 'components/kill_list.html' %}
+{% for teamname, team in summary %}
+	{% set killListTitle = 'Team ' ~ teamname ~ ' Losses' %}
+	{% set killList = team.kills %}
+	{% set isEmbedded = true %}
+	{% include 'components/kill_list.html' %}
+{% endfor %}
 
-
-{% set killListTitle = 'Team A Losses' %}
-{% set killList = summary.teamA.kills %}
-{% set isEmbedded = true %}
-{% include 'components/kill_list.html' %}
 
 {% endif %}
 
 {% endblock %}
 
 {% block opengraph %}
-	{% set totalLostISK = summary.teamA.totals.total_price + summary.teamB.totals.total_price %}
-	{% set totalSize = summary.teamA.totals.pilotCount + summary.teamB.totals.pilotCount %}
+	{% set totalSize=0 %}
+	{% set totalLostISK=0 %}
+	{% for team in summary %}
+		{% set totalLostISK = totalLostISK + team.totals.total_price %}
+		{% set totalSize = totalSize + team.totals.pilotCount %}
+	{% endfor %}
 	<meta name="twitter:title" content="zKillboard.com / {{ pageTitle }}">
 	<meta name="twitter:image" content="{{ fullsiteurl }}/img/3D.png">
 	<meta name="twitter:card" content="summary">

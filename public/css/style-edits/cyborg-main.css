@@ -17,7 +17,8 @@
 	opacity: 0.95;
 }
 
-.table tbody tr.error td
+.table tbody tr.error td,
+div.error
 {
   background-color: #2F0202;
 }

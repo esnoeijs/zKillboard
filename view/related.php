@@ -4,42 +4,48 @@ global $baseDir, $mdb;
 
 $systemID = (int) $system;
 $relatedTime = (int) $time;
+const MAX_GROUPS = 5;
 
 $json_options = json_decode($options, true);
-if (!isset($json_options['A'])) {
-	$json_options['A'] = array();
-}
-if (!isset($json_options['B'])) {
-	$json_options['B'] = array();
+for ($i=1;$i<=MAX_GROUPS;$i++) {
+	if (!isset($json_options[$i])) {
+		$json_options[$i] = array();
+	}
 }
 
 $redirect = false;
 if (isset($_GET['left'])) {
 	$entity = $_GET['left'];
-	if (!isset($json_options['A'])) {
-		$json_options['A'] = array();
+	$pos    = $_GET['pos'];
+
+	// Don't assign
+	if ($pos >= 0) {
+		if (in_array($entity, $json_options[$pos])) {
+			unset($json_options[$pos][$entity]);
+		}
+
+		// Add selected entity to the group before it's current one.
+		$json_options[--$pos][$entity] = $entity;
+
+		$redirect = true;
 	}
-	if (($key = array_search($entity, $json_options['B'])) !== false) {
-		unset($json_options['B'][$key]);
-	}
-	if (!in_array($entity, $json_options['A'])) {
-		$json_options['A'][] = $entity;
-	}
-	$redirect = true;
 }
 if (isset($_GET['right'])) {
 	$entity = $_GET['right'];
-	if (!isset($json_options['B'])) {
-		$json_options['B'] = array();
+	$pos    = $_GET['pos'];
+
+	// Don't shift entities up beyond group 5.
+	if ($pos < MAX_GROUPS) {
+		if (in_array($entity, $json_options[$pos])) {
+			unset($json_options[$pos][$entity]);
+		}
+
+		// Add selected entity to the group after it's current one.
+		$json_options[++$pos][$entity] = $entity;
+		$redirect = true;
 	}
-	if (($key = array_search($entity, $json_options['A'])) !== false) {
-		unset($json_options['A'][$key]);
-	}
-	if (!in_array($entity, $json_options['B'])) {
-		$json_options['B'][] = $entity;
-	}
-	$redirect = true;
 }
+
 if ($redirect) {
 	$json = urlencode(json_encode($json_options));
 	$url = "/related/$systemID/$relatedTime/o/$json/";
@@ -68,15 +74,16 @@ if ($mc == null) {
 	$mc = array('summary' => $summary, 'systemName' => $systemName, 'regionName' => $regionName, 'time' => $time, 'exHours' => $exHours, 'solarSystemID' => $systemID, 'relatedTime' => $relatedTime, 'options' => json_encode($json_options));
 
 	if (isset($battleID) && $battleID > 0) {
-		$teamA = $summary['teamA']['totals'];
-		$teamB = $summary['teamB']['totals'];
-		unset($teamA['groupIDs']);
-		unset($teamB['groupIDs']);
-		$mdb->set("battles", ['battleID' => $battleID], ['teamA' => $teamA]);
-		$mdb->set("battles", ['battleID' => $battleID], ['teamB' => $teamB]);
+
+		foreach ($summary as $teamName => $team) {
+			$totals = $team['totals'];
+			unset($totals['groupIDs']);
+			$mdb->set("battles", ['battleID' => $battleID], [$teamName => $team]);
+		}
 	}
 
 	RedisCache::set($key, $mc, 300);
 }
-
+$summary = $mc['summary'];
+$mc['cols'] = ceil(12/count($summary));
 $app->render('related.html', $mc);

@@ -1,5 +1,5 @@
 {% set imageSize = 64 %}
-<table class="table table-condensed table-striped table-hover">
+<div class="table table-condensed table-striped table-hover hidden-xs">
 {% for related in list %}
     {% set class='' %}
     {% set onClick = 'return false;' %}
@@ -11,19 +11,21 @@
 		{% set shipImageLinkOverride = related.destroyed %}
 		{% endautoescape %}
     {% endif %}
-    <tr class="{{ class }}" onClick='{{onClick|raw}}'>
-    <td style="width: 285px">
-    {% set field = related %}
-    {% include 'components/image_ship.html' %}
-    {% include 'components/image_char.html' %}
-    {% include 'components/image_corp.html' %}
-    {% include 'components/image_alli.html' %}
-    </td><td> 
-    {{ related.characterName }}{% if related.shipTypeID != 0%} ({{ related.shipName}}{% if related.shipTypeID != 670 and related.podded == 1%} / Capsule{%endif%}){% endif %}<br/>
-    {{ related.corporationName }}<br/>
-    {% if related.allianceID != 0 %}{{ related.allianceName}}<br/>{% endif %}
-    {% if related.factionID != 0 %}{{ related.factionName}}<br/>{% endif %}
-    </td></tr>
+    <div class="{{class}}" style="white-space : nowrap;padding: 5px 0;" onClick='{{onClick|raw}}' >
+        <div style="display: inline-block;  white-space :  normal; width: {{ imgBlockWidth }}px" >
+            {% set field = related %}
+            {% include 'components/image_ship.html' %}
+            {% include 'components/image_char.html' %}
+            {% include 'components/image_corp.html' %}
+            {% include 'components/image_alli.html' %}
+        </div>
+        <div style="vertical-align: top; margin-left: 10px; display: inline-block;">
+            {{ related.characterName }}{% if related.shipTypeID != 0%} ({{ related.shipName}}{% if related.shipTypeID != 670 and related.podded == 1%} / Capsule{%endif%}){% endif %}<br/>
+            {{ related.corporationName }}<br/>
+            {% if related.allianceID != 0 %}{{ related.allianceName}}<br/>{% endif %}
+            {% if related.factionID != 0 %}{{ related.factionName}}<br/>{% endif %}
+        </div>
+    </div>
 {% endfor %}
-</table>
+</div>
 

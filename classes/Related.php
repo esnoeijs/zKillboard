@@ -11,53 +11,49 @@ class Related
             self::addAllInvolved($involvedEntities, $killID);
         }
 
-        list($redTeam, $blueTeam) = self::createTeams($kills);
+        $teams = self::createTeams($kills);
 
-        if (isset($options['A'])) {
-            self::assignSides($options['A'], $redTeam, $blueTeam);
+        foreach ($options as $teamNr => $teamChanges) {
+            $teamNr--; // change to 0 based.
+            foreach ($teamChanges as $transferEntity) {
+                foreach ($teams as $key => &$team) {
+                    if (in_array($transferEntity, $team)) {
+                        unset($team[$transferEntity]);
+                        if (!isset($teams[$teamNr])) {
+                            $teams[$teamNr] = array();
+                        }
+                        $teams[$teamNr][$transferEntity] = (int)$transferEntity;
+                        break;
+                    }
+                }
+                unset($team);
+            }
         }
-        if (isset($options['B'])) {
-            self::assignSides($options['B'], $blueTeam, $redTeam);
+
+        $retValue = [];
+        foreach ($teams as $team) {
+            $teamInvolved = self::getInvolved($kills, $team);
+            $teamLosses   = self::getLosses($kills, $team);
+
+            self::addMoreInvolved($teamInvolved, $teamLosses);
+            Info::addInfo($teamInvolved);
+
+            $teamTotals = self::getStatsKillList(array_keys($kills), $team);
+            $teamTotals['pilotCount'] = sizeof($teamInvolved);
+            $teamMembers = self::addInfo($team);
+            asort($teamMembers);
+
+            usort($teamInvolved, 'Related::compareShips');
+
+            $name = self::generateTeamName($teamMembers);
+
+            $retValue[$name] = array(
+                'list' => $teamInvolved,
+                'kills' => $teamLosses,
+                'totals' => $teamTotals,
+                'entities' => $teamMembers
+            );
         }
-
-        $redInvolved = self::getInvolved($kills, $redTeam);
-        $blueInvolved = self::getInvolved($kills, $blueTeam);
-
-        $redKills = self::getKills($kills, $redTeam);
-        $blueKills = self::getKills($kills, $blueTeam);
-
-        self::addMoreInvolved($redInvolved, $redKills);
-        self::addMoreInvolved($blueInvolved, $blueKills);
-        Info::addInfo($redInvolved);
-        Info::addInfo($blueInvolved);
-
-        $redTotals = self::getStatsKillList(array_keys($redKills));
-        $redTotals['pilotCount'] = sizeof($redInvolved);
-        $blueTotals = self::getStatsKillList(array_keys($blueKills));
-        $blueTotals['pilotCount'] = sizeof($blueInvolved);
-
-        $red = self::addInfo($redTeam);
-        asort($red);
-        $blue = self::addInfo($blueTeam);
-        asort($blue);
-
-        usort($redInvolved, 'Related::compareShips');
-        usort($blueInvolved, 'Related::compareShips');
-
-        $retValue = array(
-                'teamA' => array(
-                    'list' => $redInvolved,
-                    'kills' => $redKills,
-                    'totals' => $redTotals,
-                    'entities' => $red,
-                    ),
-                'teamB' => array(
-                    'list' => $blueInvolved,
-                    'kills' => $blueKills,
-                    'totals' => $blueTotals,
-                    'entities' => $blue,
-                    ),
-                );
 
         return $retValue;
     }
@@ -139,7 +135,7 @@ class Related
         }
     }
 
-    private static function getKills(&$kills, $team)
+    private static function getLosses(&$kills, $team)
     {
         $teamsKills = array();
         foreach ($kills as $killID => $kill) {
@@ -154,37 +150,81 @@ class Related
         return $teamsKills;
     }
 
-    private static function getStatsKillList($killIDs)
+    static $killCache = array();
+
+    private static function getStatsKillList($killIDs, $team)
     {
-        $totalPrice = 0;
-        $totalPoints = 0;
+        $lostIsk = 0;
+        $lostPoints = 0;
         $groupIDs = array();
         $totalShips = 0;
+        $totalKills = 0;
+        $killedPoints = 0;
+        $killedIsk  =0;
         foreach ($killIDs as $killID) {
-            $kill = Kills::getKillDetails($killID);
-            $info = $kill['info'];
-            $victim = $kill['victim'];
-            $totalPrice += $info['zkb']['totalValue'];
-            $totalPoints += $info['zkb']['points'];
-            $groupID = $victim['groupID'];
-            if (!isset($groupIDs[$groupID])) {
-                $groupIDs[$groupID] = array();
-                $groupIDs[$groupID]['count'] = 0;
-                $groupIDs[$groupID]['isk'] = 0;
-                $groupIDs[$groupID]['points'] = 0;
+            $isLoss = $isKill = false;
+            if (!isset(self::$killCache[$killID])) {
+                self::$killCache[$killID] = Kills::getKillDetails($killID);
             }
-            $groupIDs[$groupID]['groupID'] = $groupID;
-            ++$groupIDs[$groupID]['count'];
-            $groupIDs[$groupID]['isk'] += $info['zkb']['totalValue'];
-            $groupIDs[$groupID]['points'] += $info['zkb']['points'];
-            ++$totalShips;
+            $kill = self::$killCache[$killID];
+            if (isset($team[self::determineAffiliationId($kill['victim'])])) {
+                $isLoss = true;
+            } else {
+                foreach ($kill['involved'] as $involved) {
+                  if (isset($team[self::determineAffiliationId($involved)])) {
+                        $isKill = true;
+                        break;
+                    }
+                }
+            }
+
+            if ($isKill) {
+                $totalKills++;
+                $info = $kill['info'];
+
+                $killedPoints += $info['zkb']['points'];
+                $killedIsk += $info['zkb']['totalValue'];
+            }
+
+            if ($isLoss) {
+                $info = $kill['info'];
+                $victim = $kill['victim'];
+                $lostIsk += $info['zkb']['totalValue'];
+                $lostPoints += $info['zkb']['points'];
+                $groupID = $victim['groupID'];
+                if (!isset($groupIDs[$groupID])) {
+                    $groupIDs[$groupID] = array();
+                    $groupIDs[$groupID]['count'] = 0;
+                    $groupIDs[$groupID]['isk'] = 0;
+                    $groupIDs[$groupID]['points'] = 0;
+                }
+                $groupIDs[$groupID]['groupID'] = $groupID;
+                ++$groupIDs[$groupID]['count'];
+                $groupIDs[$groupID]['isk'] += $info['zkb']['totalValue'];
+                $groupIDs[$groupID]['points'] += $info['zkb']['points'];
+                ++$totalShips;
+            }
         }
         Info::addInfo($groupIDs);
 
+        $eff = function ($killed, $lost) {
+            if ($killed == 0) return 0;
+            if ($lost == 0) return -1;
+
+            return ($killed / $lost) * 100;
+        };
+
         return array(
-                'total_price' => $totalPrice, 'groupIDs' => $groupIDs, 'totalShips' => $totalShips,
-                'total_points' => $totalPoints,
-                );
+            'total_price' => $lostIsk,
+            'groupIDs' => $groupIDs,
+            'totalShips' => $totalShips,
+            'total_points' => $lostPoints,
+            'killed_points' => $killedPoints,
+            'killed_isk' => $killedIsk,
+            'total_kills' => $totalKills,
+            'point_efficiency' => $eff($killedPoints, $lostPoints),
+            'isk_efficiency' => $eff($killedIsk, $lostIsk)
+        );
     }
 
     private static function addInfo(&$team)
@@ -373,24 +413,12 @@ class Related
         return $score;
     }
 
-    private static function assignSides($assignees, &$teamA, &$teamB)
-    {
-        foreach ($assignees as $id) {
-            if (!isset($teamA[$id])) {
-                $teamA[] = $id;
-            }
-            if (($key = array_search($id, $teamB)) !== false) {
-                unset($teamB[$key]);
-            }
-        }
-    }
-
     public static function compareShips($a, $b)
     {
 	global $redis;
 
         $aSize = (int) $redis->hGet("tq:typeID:" . @$a['shipTypeID'], "mass");
-        $bSize = (int) $redis->hGet("tq:typeID:" . @$b['shipTypeID'], "mass"); 
+        $bSize = (int) $redis->hGet("tq:typeID:" . @$b['shipTypeID'], "mass");
 
         return $aSize < $bSize;
     }
@@ -419,5 +447,34 @@ class Related
         array_multisort($sortOrder, SORT_DESC, $entities);
 
         return $entities;
+    }
+
+    /**
+     * Generates a team name from parts of the member entity names.
+     * The name it generates will be the same for the same group of entities each time.
+     *
+     * @param $teamMembers
+     * @return string
+     */
+    private static function generateTeamName($teamMembers)
+    {
+        $name = '';
+        foreach ($teamMembers as $member) {
+            $parts = array_values(array_filter(preg_split('/( |\.|-)/', $member), function ($part) {
+                return (strlen($part) > 3);
+            }));
+            if (count($parts)> 0) {
+                // get a part of the name based on fixed properties
+                // that way we get a "random" part of the name, but the same one each time.
+                $idx = (strlen($parts[0]) % count($parts));
+                $name .= " " . $parts[$idx];
+
+                if (strlen($name) >= 32) {
+                    break;
+                }
+            }
+        }
+
+        return $name;
     }
 }
