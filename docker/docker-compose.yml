@@ -1,0 +1,7 @@
+web:
+  container_name: web1
+  build: .
+  ports:
+    - "80:80"
+  volumes:
+    - /c/zkb:/var/www/
